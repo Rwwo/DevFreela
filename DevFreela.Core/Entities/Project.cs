@@ -6,7 +6,7 @@ namespace DevFreela.Core.Entities
 {
     public class Project : BaseEntity
     {
-        public Project(string title, string description, int idClient, int idFreelancer, decimal? totalCost)
+        public Project(string title, string description, int idClient, int idFreelancer, decimal totalCost)
         {
             Title = title;
             Description = description;
@@ -22,13 +22,48 @@ namespace DevFreela.Core.Entities
         public string Title { get; private set; }
         public string Description { get; private set; }
         public int IdClient { get; private set; }
+        public User Client { get; private set; }
         public int IdFreelancer { get; private set; }
+        public User Freelancer { get; private set; }
 
-        public decimal? TotalCost { get; private set; }
+        public decimal TotalCost { get; private set; }
         public DateTime CreateAt { get; private set; }
         public DateTime? StartAt { get; private set; }
         public DateTime? FinishAt { get; private set; }
         public ProjectStatusEnum Status { get; private set; }
         public List<ProjectComment> Comments { get; private set; }
+
+
+        public void Cancel()
+        {
+            if (Status == ProjectStatusEnum.inProgress || Status == ProjectStatusEnum.Suspended)
+                Status = ProjectStatusEnum.Cancelled;
+        }
+
+        public void Finish()
+        {
+            if(Status == ProjectStatusEnum.inProgress)
+            {
+                Status = ProjectStatusEnum.Finished;
+                FinishAt= DateTime.Now;
+            }
+
+        }
+
+        public void Start()
+        {
+            if (Status == ProjectStatusEnum.Created)
+            {
+                Status = ProjectStatusEnum.inProgress;
+                StartAt = DateTime.Now;
+            }
+        }
+
+        public void Update(string Title, string Description, decimal TotalCost)
+        {
+            this.Title = Title;
+            this.Description = Description;
+            this.TotalCost = TotalCost;
+        }
     }
 }

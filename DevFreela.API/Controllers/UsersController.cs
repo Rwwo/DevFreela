@@ -1,30 +1,57 @@
 ﻿using DevFreela.API.Models;
+using DevFreela.Application.Commands.CreateUser;
+using DevFreela.Application.Queries.GetUser;
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace DevFreela.API.Controllers
 {
     [Route("api/users")]
     public class UsersController : Controller
     {
+
+        private readonly IMediator _mediator;
+        //public ProjectsController(IProjectService projectService, IMediator mediator)
+        public UsersController(IMediator mediator)
+        {
+            //_projectService = projectService;
+            _mediator = mediator;
+        }
+
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            return Ok();
+            var query = new GetUserQuery(id);
+
+            var user = await _mediator.Send(query);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(user);
         }
 
 
+        // api/users
         [HttpPost]
-        public IActionResult Post([FromBody] CreateUserModel createUserModel)
+        public async Task<IActionResult> Post([FromBody] CreateUserCommand command)
         {
-            return CreatedAtAction(nameof(GetById), new { id = 1 }, createUserModel);
-            //return NoContent();
+            var id = await _mediator.Send(command);
+
+            return CreatedAtAction(nameof(GetById), new { id = id }, command);
         }
 
 
+        // api/users/1/login
         [HttpPut("{id}/login")]
-        public IActionResult Login(int id, [FromBody] LoginModel loginModel)
+        public IActionResult Login(int id, [FromBody] LoginModel login)
         {
+            // TODO: Para Módulo de Autenticação e Autorização
+
             return NoContent();
         }
 

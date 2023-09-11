@@ -1,8 +1,19 @@
+using DevFreela.API.Filters;
 using DevFreela.API.Models;
+using DevFreela.Application.Commands.CreateProject;
+using DevFreela.Application.Services.Implementations;
+using DevFreela.Application.Services.Interfaces;
+using DevFreela.Application.Validator;
+using DevFreela.Core.Repositories;
+using DevFreela.Infrastructure.Persistence;
+using DevFreela.Infrastructure.Persistence.Repositories;
+using FluentValidation.AspNetCore;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,11 +36,28 @@ namespace DevFreela.API
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
+        [Obsolete]
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<OpeningTimeOptions>(Configuration.GetSection("OpeningTime"));
+            //services.Configure<OpeningTimeOptions>(Configuration.GetSection("OpeningTime"));
 
-            services.AddControllers();
+            //services.AddSingleton<DevFreelaDbContext>();
+            services.AddDbContext<DevFreelaDbContext>(
+                options => options.UseNpgsql(Configuration.GetConnectionString("DevFreela")));
+
+            //services.AddScoped<IProjectService, ProjectService>();
+            //services.AddScoped<IUserService, UserService>();
+            //services.AddScoped<ISkillService, SkillService>();
+
+            services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<ISkillRepository, SkillRepository>();
+
+            services.AddMediatR(typeof(CreateProjectCommand));
+
+            services.AddControllers(opt => opt.Filters.Add(typeof(ValidationFilter)))
+                .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<CreateUserCommandValidator>());
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "DevFreela.API", Version = "v1" });
